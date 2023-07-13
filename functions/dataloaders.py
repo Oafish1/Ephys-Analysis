@@ -1,9 +1,11 @@
 from collections.abc import Sequence
+import glob
 import os
 import tarfile
 
 from kkpandas import kkio
 import mat73
+import pandas as pd
 
 
 # Tarfile loader
@@ -11,13 +13,14 @@ class Tarloader(Sequence):
     """
     Loader for ephys files providing on-the-fly extraction.  crcns/hc-11 formatting
     """
-    def __init__(self, directory, eeg=False, spk=True):
+    def __init__(self, directory, eeg=False, spk=True, chunksize=100_000):
         # eeg does nothing right now
         assert not eeg, 'eeg is not working at the moment.'
 
         self.directory = directory
         self.eeg = eeg
         self.spk = spk
+        self.chunksize = chunksize
 
         # Crawl directory
         self.ext = '.tar.gz'
@@ -56,17 +59,23 @@ class Tarloader(Sequence):
         # Preliminary
         self.extract(index)
 
-        # Get vars
+        # Novel spatial info
         novel = mat73.loadmat(os.path.join(self.directory, self.files[index], self.files[index] + '_sessInfo.mat'))
-        data = kkio.from_KK(
-            os.path.join(self.directory, self.files[index]),
-            verify_unique_clusters=False,
-            also_get_features=True,
-            also_get_waveforms=True,
-            n_samples=32,
-            fs=20_000 / 1_000,  # in ms
-            load_memoized=False,
-            save_memoized=False)
+
+        # Get existing file if possible
+        basename = os.path.join(self.directory, self.files[index], '*.kkp')
+        memofile = glob.glob(basename)[0]
+        if not memofile:
+            kkio.from_KK(
+                os.path.join(self.directory, self.files[index]),
+                verify_unique_clusters=False,
+                also_get_features=True,
+                also_get_waveforms=True,
+                n_samples=32,
+                fs=20_000 / 1_000,  # in ms
+                load_memoized=True,
+                save_memoized=True)
+        data = pd.read_csv(memofile, iterator=True, chunksize=self.chunksize)
 
         return novel, data
 
