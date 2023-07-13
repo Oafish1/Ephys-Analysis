@@ -1,4 +1,8 @@
-### 2023-07-12
+### 2023-07-12 (2)
+- Add running Windows script
+- Fix `Tarloader` use of `glob`
+
+### 2023-07-12 (1)
 - Fix `memoize` functions using `pandas` for `KKPandas`
 - QOL dataloader changes
 - Revise dataloader to use chunks

@@ -64,7 +64,8 @@ class Tarloader(Sequence):
 
         # Get existing file if possible
         basename = os.path.join(self.directory, self.files[index], '*.kkp')
-        memofile = glob.glob(basename)[0]
+        memofile = glob.glob(basename)
+        memofile = memofile[0] if memofile else None
         if not memofile:
             kkio.from_KK(
                 os.path.join(self.directory, self.files[index]),
