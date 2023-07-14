@@ -13,13 +13,14 @@ class Tarloader(Sequence):
     """
     Loader for ephys files providing on-the-fly extraction.  crcns/hc-11 formatting
     """
-    def __init__(self, directory, eeg=False, spk=True, chunksize=100_000):
+    def __init__(self, directory, eeg=False, spk=True, samples=32, chunksize=100_000):
         # eeg does nothing right now
         assert not eeg, 'eeg is not working at the moment.'
 
         self.directory = directory
         self.eeg = eeg
         self.spk = spk
+        self.samples = samples
         self.chunksize = chunksize
 
         # Crawl directory
@@ -71,9 +72,9 @@ class Tarloader(Sequence):
                 os.path.join(self.directory, self.files[index]),
                 verify_unique_clusters=False,
                 also_get_features=True,
-                also_get_waveforms=True,
-                n_samples=32,
-                fs=20_000 / 1_000,  # in ms
+                also_get_waveforms=self.spk,
+                n_samples=self.samples,
+                fs=20_000,  # in seconds
                 load_memoized=True,
                 save_memoized=True)
         data = pd.read_csv(memofile, iterator=True, chunksize=self.chunksize)

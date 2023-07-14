@@ -1,3 +1,6 @@
+### 2023-07-14
+- QOL updates
+
 ### 2023-07-12 (2)
 - Add running Windows script
 - Fix `Tarloader` use of `glob`
