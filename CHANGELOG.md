@@ -1,4 +1,5 @@
-### 2023-07-14
+### 2023-07-14 (1-2)
+- Notebook annotations
 - QOL updates
 
 ### 2023-07-12 (2)
