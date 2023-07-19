@@ -12,9 +12,28 @@ import pandas as pd
 class Tarloader(Sequence):
     """
     Loader for ephys files providing on-the-fly extraction.  crcns/hc-11 formatting
+    Data is extracted on-the-fly, so the first call to __getitem__ will take a while.
+    .tar.gz is expected to include the following file formats:
+        .clu
+        .fet
+        .res
+        .spk
+        _sessioninfo.mat
+    Data formarts refer to:
+        https://crcns.org/data-sets/hc/hc-11/about-hc-11
     """
     def __init__(self, directory, eeg=False, spk=True, samples=32, chunksize=100_000):
         # eeg does nothing right now
+        """
+        Args:
+            directory (str): Directory containing tar.gz files
+            eeg (bool): Extract eeg files
+            spk (bool): Extract spk files
+            samples (int): Number of samples to extract from spk files ?? XH: I guess this is the number of samples per spike
+            chunksize (int): Number of rows of csv to load from the .kkp file at a time
+        Usage:
+
+        """
         assert not eeg, 'eeg is not working at the moment.'
 
         self.directory = directory
@@ -23,7 +42,8 @@ class Tarloader(Sequence):
         self.samples = samples
         self.chunksize = chunksize
 
-        # Crawl directory
+        # Crawl directory, extract base filenames as a list of strings in self.files
+        # TODO: Check for folders,  .kkp file exist, then , then no need to check for .tar, we only need .k
         self.ext = '.tar.gz'
         self.files = os.listdir(self.directory)
         self.files = [
@@ -32,9 +52,6 @@ class Tarloader(Sequence):
             and (s.split('.')[-1] not in ['mat', 'xml'])
             and (s.split('.')[0][-4:] not in ['_eeg', '_spk'])
             and (s.split('.')[0] != 'NoveltySessInfoMatFiles')]
-
-        # Set empty items for storage
-        self.dataloaders = []
 
     def extract(self, index):
         # Return early if extracted
