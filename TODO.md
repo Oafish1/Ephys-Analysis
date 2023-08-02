@@ -4,3 +4,4 @@
 
 ### MEDIUM
 - Add checks for incomplete extraction
+- Highlight epochs using `sessInfo.Epochs` in preview

@@ -1,3 +1,8 @@
+### 2023-08-02
+- Additional testing
+- Change example data to include fuller ephys feature
+- Revise example loading strategy
+
 ### 2023-07-21
 - Add detection for folders with no associated tar file
 - Add indexing by session name
