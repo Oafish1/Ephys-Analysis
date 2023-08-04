@@ -1,10 +1,12 @@
+from collections import Iterable
 from collections.abc import Sequence
-import glob
 import os
+import re
 import tarfile
 
 from kkpandas import kkio
 import mat73
+import numpy as np
 import pandas as pd
 
 
@@ -21,8 +23,16 @@ class Tarloader(Sequence):
         _sessioninfo.mat
     Data formarts refer to:
         https://crcns.org/data-sets/hc/hc-11/about-hc-11
+
+    HC-11:
+    Per spike, there are 32 samples recorded for 7-9 channels.  Samples appear to
+    just be a way of characterizing the spikes.  The channels are per-group, as
+    indicated by the file names.  The variance in time between spikes is a product of
+    the preprocessing to get the raw data into spike format.  The EEG tar seems to
+    contain the raw waveforms downsampled to 1250 Hz.  Don't use the 0 or 1 clusters,
+    as those are noise and unclusterable units (wide spikes)
     """
-    def __init__(self, directory, eeg=False, spk=True, samples=32, chunksize=100_000):
+    def __init__(self, directory, ext='.tar.gz', eeg=False, spk=True, samples=32, channels=-1, use_disk=True):
         # eeg does nothing right now
         """
         Args:
@@ -37,25 +47,21 @@ class Tarloader(Sequence):
         assert not eeg, 'eeg is not working at the moment.'
 
         self.directory = directory
+        self.ext = ext
         self.eeg = eeg
         self.spk = spk
         self.samples = samples
-        self.chunksize = chunksize
+        self.channels = channels
+        self.use_disk = use_disk  # Saves around 5/6 of time loading
 
-        # Crawl directory, extract base filenames as a list of strings in self.files
-        # TODO: Check for folders,  .kkp file exist, then , then no need to check for .tar, we only need .k
-        self.ext = '.tar.gz'
+        # Crawl directory
         self.files = os.listdir(self.directory)
-        self.files = [
-            ''.join(s.split('.')[:-2]) for s in self.files
-            if os.path.isfile(os.path.join(self.directory, s))
-            and (s.split('.')[-1] not in ['mat', 'xml'])
-            and (s.split('.')[0][-4:] not in ['_eeg', '_spk'])
-            and (s.split('.')[0] != 'NoveltySessInfoMatFiles')]
+        self.files = [f for f in self.files if re.search(r'[a-zA-Z]+_\d+(.tar.gz)?', f)]
+        self.files = [f.replace(self.ext, '').replace('_eeg', '').replace('_spk', '') for f in self.files]
+        self.files = list(np.unique(self.files))
 
     def extract(self, index):
         # Return early if extracted
-        # TODO: Add checks for eeg and spk, as well as incomplete extraction
         if self.files[index] in os.listdir(self.directory):
             return
 
@@ -74,50 +80,76 @@ class Tarloader(Sequence):
                 f.extractall(self.directory)
 
     def __getitem__(self, index):
+        # Index by session name
+        if not isinstance(index, int):
+            idx = np.argwhere(np.array(self.files) == index)
+            if len(idx) < 1:
+                raise IndexError(f'Index {index} not found')
+            index = idx[0][0]
+
         # Preliminary
         self.extract(index)
 
         # Novel spatial info
         novel = mat73.loadmat(os.path.join(self.directory, self.files[index], self.files[index] + '_sessInfo.mat'))
 
-        # Get existing file if possible
-        basename = os.path.join(self.directory, self.files[index], '*.kkp')
-        memofile = glob.glob(basename)
-        memofile = memofile[0] if memofile else None
-        if not memofile:
-            kkio.from_KK(
-                os.path.join(self.directory, self.files[index]),
-                verify_unique_clusters=False,
-                also_get_features=True,
-                also_get_waveforms=self.spk,
-                n_samples=self.samples,
-                fs=20_000,  # in seconds
-                load_memoized=True,
-                save_memoized=True)
-        data = pd.read_csv(memofile, iterator=True, chunksize=self.chunksize)
-
-        return novel, data
+        # Return dl
+        return Dataloader(
+            os.path.join(self.directory, self.files[index]),
+            novel=novel,
+            eeg=self.eeg,
+            spk=self.spk,
+            samples=self.samples,
+            channels=self.channels,
+            use_disk=self.use_disk,
+        )
 
     def __len__(self):
         return len(self.files)
 
 
-# # Individual ephys loader
-# class Dataloader(Sequence):
-#     def __init__(self, directory, eeg=False, spk=True):
-#         self.directory = directory
-#         self.basefile = os.path.basename(self.directory)
-#         self.eeg = eeg
-#         self.spk = spk
+# Individual ephys loader
+class Dataloader(Sequence):
+    def __init__(self, directory, *, novel, eeg, spk, samples, channels, use_disk):
+        self.directory = directory
+        self.novel = novel
+        self.eeg = eeg
+        self.spk = spk
+        self.samples = samples
+        self.channels = channels
+        self.use_disk = use_disk
 
-#         # Crawl directory
-#         self.ftypes = ['clu', 'fet', 'spk']
-#         self.files = os.listdir(directory)
-#         fnums = [int(s.split('.')[2]) for s in self.files if (s.split('.')[-2] in ['clu'])]
-#         self.num_files = len(fnums)
+        # Crawl directory
+        files = os.listdir(directory)
+        fnums = np.unique([int(f.split('.')[2]) for f in files if re.search(r'[a-zA-Z]+_\d+.(clu|res|fet|spk).\d+', f)])
+        self.num_files = len(fnums)
 
-#     def __getitem__(self, index):
-#         return kkio.from_KK(self.directory, verify_unique_clusters=False, also_get_features=True, also_get_waveforms=True, n_samples=32)
+    def __getitem__(self, index):
+        # Get existing file if possible
+        fname = os.path.join(self.directory, f'COMPILED_{index+1}.csv')
+        if self.use_disk and os.path.isfile(fname):
+            data = pd.read_csv(fname)
 
-#     def __len__(self):
-#         return len(self.num_files)
+        # Process data
+        else:
+            data = kkio.from_KK(
+                self.directory,
+                groups_to_get=index+1,
+                verify_unique_clusters=False,
+                also_get_features=True,
+                also_get_waveforms=self.spk,
+                n_samples=self.samples,
+                n_channels=self.channels,
+                fs=20_000,  # in seconds
+                load_memoized=False,
+                save_memoized=False,
+            )
+
+            # Save file
+            if self.use_disk:
+                data.to_csv(fname)
+
+        return self.novel, data
+
+    def __len__(self):
+        return self.num_files

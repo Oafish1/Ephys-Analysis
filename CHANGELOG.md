@@ -1,4 +1,25 @@
-### 2023-07-19
+### 2023-08-02
+- Additional testing
+- Change example data to include fuller ephys feature
+- Revise example loading strategy
+
+### 2023-07-21
+- Add detection for folders with no associated tar file
+- Add indexing by session name
+- Add saving functionality for individual groups
+- Re-added sub-dataloader structure
+- Revise example to show only one group
+- Revise loader behavior to load singular groups
+- Use REGEX for file-grabbing
+
+### 2023-07-19 (3)
+- Up sample size
+- Additional parameters for `Tarloader`
+
+### 2023-07-19 (2)
+- Enhanced notebook example
+
+### 2023-07-19 (1)
 - Recompilation
 
 ### 2023-07-14 (1-2)
