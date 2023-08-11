@@ -1,3 +1,9 @@
+### 2023-08-10
+- Add capability to extract to and source from different locations
+- Add correlation analysis to example and visualization
+- Fix saved file read indexing
+- Revise example data aggregation strategy
+
 ### 2023-08-02
 - Additional testing
 - Change example data to include fuller ephys feature

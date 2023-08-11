@@ -23,11 +23,17 @@ class Tarloader(Sequence):
     contain the raw waveforms downsampled to 1250 Hz.  Don't use the 0 or 1 clusters,
     as those are noise and unclusterable units (wide spikes)
     """
-    def __init__(self, directory, ext='.tar.gz', eeg=False, spk=True, samples=32, channels=-1, use_disk=True):
-        # eeg does nothing right now
-        assert not eeg, 'eeg is not working at the moment.'
+    def __init__(self, tar_directory=None, export_directory=None, *, ext='.tar.gz', eeg=False, spk=True, samples=32, channels=-1, use_disk=True):
+        assert tar_directory or export_directory, 'One of `tar_directory` or `export_directory` must be provided.'
+        assert not eeg, 'eeg cannot be exported at the moment.'
 
-        self.directory = directory
+        # Fill directory arguments
+        if not tar_directory: tar_directory = export_directory
+        if not export_directory: export_directory = tar_directory
+
+        # Fill arguments
+        self.tar_directory = tar_directory
+        self.export_directory = export_directory
         self.ext = ext
         self.eeg = eeg
         self.spk = spk
@@ -36,29 +42,29 @@ class Tarloader(Sequence):
         self.use_disk = use_disk  # Saves around 5/6 of time loading
 
         # Crawl directory
-        self.files = os.listdir(self.directory)
+        self.files = os.listdir(self.tar_directory) + os.listdir(self.export_directory)
         self.files = [f for f in self.files if re.search(r'[a-zA-Z]+_\d+(.tar.gz)?', f)]
         self.files = [f.replace(self.ext, '').replace('_eeg', '').replace('_spk', '') for f in self.files]
         self.files = list(np.unique(self.files))
 
     def extract(self, index):
-        # Return early if extracted
-        if self.files[index] in os.listdir(self.directory):
+        # Return early if extracted (doesn't check if dir or file)
+        if self.files[index] in os.listdir(self.export_directory):
             return
 
         # Extract clu, fet
-        with tarfile.open(os.path.join(self.directory, self.files[index] + self.ext), 'r:gz') as f:
-            f.extractall(self.directory)
+        with tarfile.open(os.path.join(self.tar_directory, self.files[index] + self.ext), 'r:gz') as f:
+            f.extractall(self.export_directory)
 
         # Extract eeg  # Unzip always errors out
         if self.eeg:
-            with tarfile.open(os.path.join(self.directory, self.files[index] + '_eeg' + self.ext), 'r:gz') as f:
-                f.extractall(self.directory)
+            with tarfile.open(os.path.join(self.tar_directory, self.files[index] + '_eeg' + self.ext), 'r:gz') as f:
+                f.extractall(self.export_directory)
 
         # Extract spk
         if self.spk:
-            with tarfile.open(os.path.join(self.directory, self.files[index] + '_spk' + self.ext), 'r:gz') as f:
-                f.extractall(self.directory)
+            with tarfile.open(os.path.join(self.tar_directory, self.files[index] + '_spk' + self.ext), 'r:gz') as f:
+                f.extractall(self.export_directory)
 
     def __getitem__(self, index):
         # Index by session name
@@ -72,11 +78,11 @@ class Tarloader(Sequence):
         self.extract(index)
 
         # Novel spatial info
-        novel = mat73.loadmat(os.path.join(self.directory, self.files[index], self.files[index] + '_sessInfo.mat'))
+        novel = mat73.loadmat(os.path.join(self.export_directory, self.files[index], self.files[index] + '_sessInfo.mat'))
 
         # Return dl
         return Dataloader(
-            os.path.join(self.directory, self.files[index]),
+            os.path.join(self.export_directory, self.files[index]),
             novel=novel,
             eeg=self.eeg,
             spk=self.spk,
@@ -109,7 +115,7 @@ class Dataloader(Sequence):
         # Get existing file if possible
         fname = os.path.join(self.directory, f'COMPILED_{index+1}.csv')
         if self.use_disk and os.path.isfile(fname):
-            data = pd.read_csv(fname)
+            data = pd.read_csv(fname, index_col=0)
 
         # Process data
         else:
