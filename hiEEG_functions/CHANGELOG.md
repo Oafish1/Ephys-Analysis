@@ -1,3 +1,6 @@
+### 2023-10-11
+- Add documentation
+
 ### 2023-09-15
 - Move `hiEEG` dataloader to separate module
 

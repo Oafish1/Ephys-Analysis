@@ -5,7 +5,16 @@ import numpy as np
 
 
 def load_hiEEG_data(subject, session, folder='data/hiEEG'):
-    "Load data for `subject` and `session` from `folder`"
+    """
+    Load data for `subject` and `session` from `folder`
+
+    NOTES
+    -----
+    Data is split into three categories:
+    EEG Scalp Recordings (256Hz)
+    iEEG Macroelectrodes (Filtered to single-neuron) (4kHz)
+    iEEG Microelectrodes/Depth electrodes (Filtered to single-neuron) (32kHz)
+    """
     # Refer to https://gin.g-node.org/USZ_NCH/Human_MTL_units_scalp_EEG_and_iEEG_verbal_WM/src/master/code_MATLAB/Load_Data_Example_Script.m for structure
     # Formatting
     file_string = f'Data_Subject_{subject:02d}_Session_{session:02d}'
