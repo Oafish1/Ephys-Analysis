@@ -3,6 +3,7 @@ mat73
 matplotlib
 pandas
 pip-tools
+pynwb
 scipy
 seaborn
 tqdm

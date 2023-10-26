@@ -1,3 +1,6 @@
+### 2023-10-26
+- Read microelectrode data and plot
+
 ### 2023-10-11
 - Add documentation
 
