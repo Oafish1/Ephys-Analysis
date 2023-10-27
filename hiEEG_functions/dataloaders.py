@@ -2,17 +2,19 @@ import os
 
 import h5py
 import numpy as np
+import pynwb
 
 
-def load_hiEEG_data(subject, session, folder='data/hiEEG'):
+def load_iEEG_macro(subject, session, folder='data/hiEEG'):
     """
     Load data for `subject` and `session` from `folder`
+    Data is INDEXED BY TRIAL
 
     NOTES
     -----
     Data is split into three categories:
     EEG Scalp Recordings (256Hz)
-    iEEG Macroelectrodes (Filtered to single-neuron) (4kHz)
+    *iEEG Macroelectrodes (Filtered to single-neuron) (4kHz)
     iEEG Microelectrodes/Depth electrodes (Filtered to single-neuron) (32kHz)
     """
     # Refer to https://gin.g-node.org/USZ_NCH/Human_MTL_units_scalp_EEG_and_iEEG_verbal_WM/src/master/code_MATLAB/Load_Data_Example_Script.m for structure
@@ -42,9 +44,66 @@ def load_hiEEG_data(subject, session, folder='data/hiEEG'):
         correct = trial_meta['Correct'][0][0]
         response_time = trial_meta['Response time'][0][0]
 
+
         # Record
-        data.append({'time': time, 'waveform': waveform, 'electrode_names': electrode_names})
-        meta.append({'set_size': set_size, 'correct': correct, 'response_time': response_time})
+        data.append({
+            'time': time,
+            'waveform': waveform,
+            'electrode_names': electrode_names
+        })
+        meta.append({
+            'trial': None,
+            'set_size': set_size,
+            'correct': correct,
+            'response_time': response_time
+        })
 
     # Return
+    return data, meta
+
+
+def load_iEEG_micro(subject, session, folder='data/hiEEG'):
+    """
+    Load data for `subject` and `session` from `folder` for microelectrode data
+    Data is CONTINUOUS
+
+    NOTES
+    -----
+    Data is split into three categories:
+    EEG Scalp Recordings (256Hz)
+    iEEG Macroelectrodes (Filtered to single-neuron) (4kHz)
+    *iEEG Microelectrodes/Depth electrodes (Filtered to single-neuron) (32kHz)
+    """
+    # Formatting
+    file_string = f'sub-{subject:02d}/'
+    file_string = os.path.join(
+        file_string,
+        os.listdir(os.path.join(folder, file_string))[session]
+    )
+
+    # Load file
+    nwbfile = pynwb.NWBHDF5IO(os.path.join(folder, file_string), mode='r').read()
+
+    # Extract data
+    micro_data = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].data[:]
+    micro_time = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].timestamps[:]
+    micro_electrodes = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].electrodes[:]
+    data = {
+        'time': micro_time,
+        'waveform': micro_data,
+        'electrodes': micro_electrodes['label'].to_numpy()
+    }
+
+    # Extract meta
+    # NOTE: Is `micro_answers` correct?  For 1-1 it is all false
+    micro_answers = nwbfile.processing['behavior'].data_interfaces['BehavioralEvents.response'].time_series['response'].data[:]
+    micro_answers_time = nwbfile.processing['behavior'].data_interfaces['BehavioralEvents.response'].time_series['response'].timestamps[:]
+    micro_trials = nwbfile.trials[:]
+    meta = {
+        'trial': micro_trials[['start_time', 'stop_time']].to_numpy(),
+        'set_size': micro_trials['set_size'].to_numpy(),
+        'correct': micro_answers == micro_trials['solution'].to_numpy(),
+        'response_time': micro_answers_time - (micro_trials['start_time'].to_numpy() + 6)
+    }
+
     return data, meta

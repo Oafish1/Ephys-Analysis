@@ -1,3 +1,7 @@
+### 2023-10-27
+- Clean notebook
+- Implement microelectrode reading in dataloader module
+
 ### 2023-10-26
 - Read microelectrode data and plot
 
