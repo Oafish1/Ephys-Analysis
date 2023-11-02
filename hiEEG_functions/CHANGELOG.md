@@ -1,3 +1,6 @@
+### 2023-11-02
+- Add position data to micro loader
+
 ### 2023-10-27
 - Clean notebook
 - Implement microelectrode reading in dataloader module

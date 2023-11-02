@@ -49,7 +49,7 @@ def load_iEEG_macro(subject, session, folder='data/hiEEG'):
         data.append({
             'time': time,
             'waveform': waveform,
-            'electrode_names': electrode_names
+            'electrodes': electrode_names
         })
         meta.append({
             'trial': None,
@@ -91,7 +91,8 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG'):
     data = {
         'time': micro_time,
         'waveform': micro_data,
-        'electrodes': micro_electrodes['label'].to_numpy()
+        'electrodes': micro_electrodes['label'].to_numpy(),
+        'electrode_positions': micro_electrodes[['x', 'y', 'z']].to_numpy(),
     }
 
     # Extract meta
