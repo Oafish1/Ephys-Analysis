@@ -1,4 +1,5 @@
-### 2023-11-02
+### 2023-11-02 (1-2)
+- Add electrode position visualization
 - Add position data to micro loader
 
 ### 2023-10-27
