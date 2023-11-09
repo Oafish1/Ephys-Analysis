@@ -1,3 +1,7 @@
+### 2023-11-09
+- Add electrode locations (text) to loader output
+- Add electrode locations (text) to electrode position visualization
+
 ### 2023-11-02 (1-2)
 - Add electrode position visualization
 - Add position data to micro loader

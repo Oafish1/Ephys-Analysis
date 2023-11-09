@@ -93,6 +93,7 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG'):
         'waveform': micro_data,
         'electrodes': micro_electrodes['label'].to_numpy(),
         'electrode_positions': micro_electrodes[['x', 'y', 'z']].to_numpy(),
+        'electrode_locations': micro_electrodes['location'].to_numpy()
     }
 
     # Extract meta
