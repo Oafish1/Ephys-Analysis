@@ -73,6 +73,8 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG'):
     EEG Scalp Recordings (256Hz)
     iEEG Macroelectrodes (Filtered to single-neuron) (4kHz)
     *iEEG Microelectrodes/Depth electrodes (Filtered to single-neuron) (32kHz)
+
+    It seems as if electrode locations are approximate, as they are the same across all sessions
     """
     # Formatting
     file_string = f'sub-{subject:02d}/'
