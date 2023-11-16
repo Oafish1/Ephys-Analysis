@@ -1,5 +1,8 @@
-### 2023-11-15
+### 2023-11-15 (1-2)
+- Adjust correlation plot to use FDR
 - Correlation plot for primary outcomes and maximal absolute voltage
+- Fix session indexing for micro data
+- Improve correlation plot quality
 
 ### 2023-11-09
 - Add electrode locations (text) to loader output

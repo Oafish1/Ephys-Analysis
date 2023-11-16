@@ -78,7 +78,7 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG'):
     file_string = f'sub-{subject:02d}/'
     file_string = os.path.join(
         file_string,
-        os.listdir(os.path.join(folder, file_string))[session]
+        os.listdir(os.path.join(folder, file_string))[session-1]
     )
 
     # Load file
