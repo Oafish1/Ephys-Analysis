@@ -1,3 +1,6 @@
+### 2023-11-15
+- Correlation plot for primary outcomes and maximal absolute voltage
+
 ### 2023-11-09
 - Add electrode locations (text) to loader output
 - Add electrode locations (text) to electrode position visualization
