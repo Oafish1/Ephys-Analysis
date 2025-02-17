@@ -1,3 +1,6 @@
+### 2025-02-17
+- Add major electrode location annotations to dataloader output
+
 ### 2023-11-15 (1-3)
 - Adjust correlation plot to use FDR
 - Correlation plot for primary outcomes and maximal absolute voltage

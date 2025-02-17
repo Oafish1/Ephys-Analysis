@@ -90,12 +90,25 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG'):
     micro_data = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].data[:]
     micro_time = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].timestamps[:]
     micro_electrodes = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].electrodes[:]
+    loc_translation = {
+        'Hipp': 'Hippocampus',
+        'STG': 'Superior Temporal Gyrus',
+        'MTG': 'Middle Temporal Gyrus',
+        'ITG': 'Inferior Temporal Gyrus',
+        'INS': 'Insular Gyrus',
+        'Amyg': 'Amygdala',
+    }
     data = {
         'time': micro_time,
         'waveform': micro_data,
         'electrodes': micro_electrodes['label'].to_numpy(),
         'electrode_positions': micro_electrodes[['x', 'y', 'z']].to_numpy(),
-        'electrode_locations': micro_electrodes['location'].to_numpy()
+        'electrode_locations': micro_electrodes['location'].to_numpy(),
+        'electrode_major_locations': np.array([
+            loc_translation[loc.split(', ')[0]]
+            if loc.split(', ')[0] in loc_translation
+            else loc.split(', ')[0]
+            for loc in micro_electrodes['location'].to_numpy()]),
     }
 
     # Extract meta
