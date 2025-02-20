@@ -97,14 +97,16 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG'):
         'ITG': 'Inferior Temporal Gyrus',
         'INS': 'Insular Gyrus',
         'Amyg': 'Amygdala',
+        'FuG': 'Fusiform Gyrus',
+        'PhG': 'Parahippocampal Gyrus',
     }
     data = {
         'time': micro_time,
         'waveform': micro_data,
         'electrodes': micro_electrodes['label'].to_numpy(),
         'electrode_positions': micro_electrodes[['x', 'y', 'z']].to_numpy(),
-        'electrode_locations': micro_electrodes['location'].to_numpy(),
-        'electrode_major_locations': np.array([
+        'electrode_regions': micro_electrodes['location'].to_numpy(),
+        'electrode_major_regions': np.array([
             loc_translation[loc.split(', ')[0]]
             if loc.split(', ')[0] in loc_translation
             else loc.split(', ')[0]

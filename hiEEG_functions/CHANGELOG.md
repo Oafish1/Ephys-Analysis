@@ -1,3 +1,8 @@
+### 2025-02-20
+- Add NA handling and masking to correlation analysis
+- Change `_locations` suffix to `_regions`
+- Use mean instead of max
+
 ### 2025-02-17
 - Add major electrode location annotations to dataloader output
 
