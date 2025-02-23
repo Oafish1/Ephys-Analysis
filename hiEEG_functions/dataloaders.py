@@ -90,27 +90,38 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG'):
     micro_data = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].data[:]
     micro_time = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].timestamps[:]
     micro_electrodes = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].electrodes[:]
-    loc_translation = {
-        'Hipp': 'Hippocampus',
-        'STG': 'Superior Temporal Gyrus',
-        'MTG': 'Middle Temporal Gyrus',
-        'ITG': 'Inferior Temporal Gyrus',
-        'INS': 'Insular Gyrus',
+    reg_translation = {
         'Amyg': 'Amygdala',
         'FuG': 'Fusiform Gyrus',
+        'Hipp': 'Hippocampus',
+        'INS': 'Insular Gyrus',
+        'IPL': 'Inferior Parietal Lobule',
+        'ITG': 'Inferior Temporal Gyrus',
+        'MTG': 'Middle Temporal Gyrus',
         'PhG': 'Parahippocampal Gyrus',
+        'STG': 'Superior Temporal Gyrus',
+        'pSTS': 'posterior Superior Temporal Sulcus',
     }
+    electrode_major_regions = np.array([
+        reg_translation[loc.split(', ')[0]]
+        if loc.split(', ')[0] in reg_translation
+        else loc.split(', ')[0]
+        for loc in micro_electrodes['location'].to_numpy()])
+    lateral = np.array([
+        loc.split(', ')[1].split(' ')[0]
+        if len(loc.split(', ')) > 1 else None
+        for loc in micro_electrodes['location'].to_numpy()])
+    electrode_major_lateral_regions = np.array([
+        ' '.join([s for s in (lat, loc) if s is not None])
+        for lat, loc in zip(lateral, electrode_major_regions)])
     data = {
         'time': micro_time,
         'waveform': micro_data,
         'electrodes': micro_electrodes['label'].to_numpy(),
         'electrode_positions': micro_electrodes[['x', 'y', 'z']].to_numpy(),
         'electrode_regions': micro_electrodes['location'].to_numpy(),
-        'electrode_major_regions': np.array([
-            loc_translation[loc.split(', ')[0]]
-            if loc.split(', ')[0] in loc_translation
-            else loc.split(', ')[0]
-            for loc in micro_electrodes['location'].to_numpy()]),
+        'electrode_major_regions': electrode_major_regions,
+        'electrode_major_lateral_regions': electrode_major_lateral_regions,
     }
 
     # Extract meta

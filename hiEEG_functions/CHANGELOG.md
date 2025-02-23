@@ -1,3 +1,8 @@
+### 2025-02-22
+- Add lateral separation to dataloader `electrode_major_lateral_regions`
+- Electrode position plot revisions and major region coloration
+- Update major region translation list
+
 ### 2025-02-20
 - Add NA handling and masking to correlation analysis
 - Change `_locations` suffix to `_regions`
