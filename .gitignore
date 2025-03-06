@@ -3,3 +3,9 @@ __pycache__/
 
 # Temp
 temp*
+
+# Intermediate Results
+results/
+
+# Detailed Documentation for data formats etc.
+docs/
