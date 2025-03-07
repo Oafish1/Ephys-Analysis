@@ -1,3 +1,9 @@
+### 2025-03-07
+- Add file string to return
+- Formatting fix for global region count
+- Label cutoff fix for electrode location visualization
+- Units for electrode location visualization
+
 ### 2025-02-22
 - Add lateral separation to dataloader `electrode_major_lateral_regions`
 - Electrode position plot revisions and major region coloration

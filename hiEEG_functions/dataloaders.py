@@ -19,14 +19,15 @@ def load_iEEG_macro(subject, session, folder='data/hiEEG'):
     """
     # Refer to https://gin.g-node.org/USZ_NCH/Human_MTL_units_scalp_EEG_and_iEEG_verbal_WM/src/master/code_MATLAB/Load_Data_Example_Script.m for structure
     # Formatting
-    file_string = f'Data_Subject_{subject:02d}_Session_{session:02d}'
+    session_string = f'Data_Subject_{subject:02d}_Session_{session:02d}'
+    file_string = session_string + '.h5'
 
     # Load file
-    f = h5py.File(os.path.join(folder, file_string) + '.h5', 'r')
+    f = h5py.File(os.path.join(folder, file_string), 'r')
 
     # Extract data
     data, meta = [], []
-    data_arrays = f['data'][file_string]['data_arrays']
+    data_arrays = f['data'][session_string]['data_arrays']
     trial_prefix = 'iEEG_Data_'
     trial_keys = [k for k in data_arrays.keys() if trial_prefix in k]
     for trial_key in trial_keys:
@@ -55,11 +56,11 @@ def load_iEEG_macro(subject, session, folder='data/hiEEG'):
             'trial': None,
             'set_size': set_size,
             'correct': correct,
-            'response_time': response_time
+            'response_time': response_time,
         })
 
     # Return
-    return data, meta
+    return data, meta, file_string
 
 
 def load_iEEG_micro(subject, session, folder='data/hiEEG'):
@@ -133,7 +134,8 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG'):
         'trial': micro_trials[['start_time', 'stop_time']].to_numpy(),
         'set_size': micro_trials['set_size'].to_numpy(),
         'correct': micro_answers == micro_trials['solution'].to_numpy(),
-        'response_time': micro_answers_time - (micro_trials['start_time'].to_numpy() + 6)
+        'response_time': micro_answers_time - (micro_trials['start_time'].to_numpy() + 6),
+        'fname': file_string,
     }
 
     return data, meta
