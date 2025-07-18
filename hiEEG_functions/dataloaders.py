@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import h5py
 import numpy as np
@@ -88,6 +89,7 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG'):
     nwbfile = pynwb.NWBHDF5IO(os.path.join(folder, file_string), mode='r').read()
 
     # Extract data
+    # NOTE: June 10th data has different format (nwbfile.acquisition['ecephys.lfp'].data[:])
     micro_data = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].data[:]
     micro_time = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].timestamps[:]
     micro_electrodes = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].electrodes[:]
@@ -139,3 +141,24 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG'):
     }
 
     return data, meta
+
+
+def detect_segments(time, waveform, eps=1e-5):
+    assert time.shape[0] == waveform.shape[0], 'Time and waveform length must match.'
+
+    # Detect gaps
+    gaps = time[1:] - time[:-1]
+    gaps = np.argwhere(gaps > np.min(gaps) + eps).flatten() + 1  # +1 to indicate the start of each segment, inclusive
+
+    # Detect if evenly spaced
+    segment_timesteps = gaps[0]
+    if (segment_timesteps * (np.arange(gaps.shape[0])+1) == gaps).all() and gaps[-1] + segment_timesteps == time.shape[0]:
+        new_time = time.reshape((-1, segment_timesteps))
+        new_waveform = waveform.reshape((-1, segment_timesteps, waveform.shape[-1]))
+    # If not, return list
+    else:
+        warnings.warn('Irregularly spaced input waveform, outputting list.')
+        start_idx, end_idx = [0] + gaps.tolist(), gaps.tolist() + [time.shape[0]]
+        new_time = [time[sidx:eidx]  for sidx, eidx in zip(start_idx, end_idx)]
+        new_waveform = [waveform[sidx:eidx]  for sidx, eidx in zip(start_idx, end_idx)]
+    return {'time': new_time, 'waveform': new_waveform}

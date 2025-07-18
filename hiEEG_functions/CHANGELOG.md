@@ -1,3 +1,9 @@
+### 2025-07-18
+- Delete unused TODO file
+
+### 2025-07-17
+- Add `detect_segments` function for segmenting trials by detected blank areas
+
 ### 2025-03-07
 - Add file string to return
 - Formatting fix for global region count
