@@ -1,3 +1,7 @@
+### 2025-07-31
+- Compatibility for new data files
+- Recalculate `hiEEG` notebook on new files
+
 ### 2025-07-18
 - Delete unused TODO file
 

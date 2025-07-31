@@ -64,7 +64,7 @@ def load_iEEG_macro(subject, session, folder='data/hiEEG'):
     return data, meta, file_string
 
 
-def load_iEEG_micro(subject, session, folder='data/hiEEG'):
+def load_iEEG_micro(subject, session, folder='data/hiEEG', format='old'):
     """
     Load data for `subject` and `session` from `folder` for microelectrode data
     Data is CONTINUOUS
@@ -78,6 +78,10 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG'):
 
     It seems as if electrode locations are approximate, as they are the same across all sessions
     """
+    # Arguments
+    format_types = ('old', 'new')
+    assert format in format_types, f'Unknown format type "{format}", expected one of {format_types}'
+
     # Formatting
     file_string = f'sub-{subject:02d}/'
     file_string = os.path.join(
@@ -89,10 +93,14 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG'):
     nwbfile = pynwb.NWBHDF5IO(os.path.join(folder, file_string), mode='r').read()
 
     # Extract data
-    # NOTE: June 10th data has different format (nwbfile.acquisition['ecephys.lfp'].data[:])
-    micro_data = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].data[:]
-    micro_time = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].timestamps[:]
-    micro_electrodes = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].electrodes[:]
+    if format == 'old':
+        micro_data = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].data[:]
+        micro_time = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].timestamps[:]
+        micro_electrodes = nwbfile.processing['ecephys'].data_interfaces['LFP'].electrical_series['ecephys.lfp'].electrodes[:]
+    elif format == 'new':
+        micro_data = nwbfile.acquisition['ecephys.lfp'].data[:]
+        micro_time = nwbfile.acquisition['ecephys.lfp'].timestamps[:]
+        micro_electrodes = nwbfile.acquisition['ecephys.lfp'].electrodes[:]
     reg_translation = {
         'Amyg': 'Amygdala',
         'FuG': 'Fusiform Gyrus',
@@ -129,13 +137,18 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG'):
 
     # Extract meta
     # NOTE: Is `micro_answers` correct?  For 1-1 it is all false
-    micro_answers = nwbfile.processing['behavior'].data_interfaces['BehavioralEvents.response'].time_series['response'].data[:]
-    micro_answers_time = nwbfile.processing['behavior'].data_interfaces['BehavioralEvents.response'].time_series['response'].timestamps[:]
     micro_trials = nwbfile.trials[:]
+    if format == 'old':
+        micro_answers = nwbfile.processing['behavior'].data_interfaces['BehavioralEvents.response'].time_series['response'].data[:]
+        micro_correct = micro_answers == micro_trials['solution'].to_numpy()
+        micro_answers_time = nwbfile.processing['behavior'].data_interfaces['BehavioralEvents.response'].time_series['response'].timestamps[:]
+    elif format == 'new':
+        micro_correct = nwbfile.trials[:]['correct'].to_numpy().astype(bool)
+        micro_answers_time = nwbfile.trials[:]['response_time'].to_numpy()
     meta = {
         'trial': micro_trials[['start_time', 'stop_time']].to_numpy(),
         'set_size': micro_trials['set_size'].to_numpy(),
-        'correct': micro_answers == micro_trials['solution'].to_numpy(),
+        'correct': micro_correct,
         'response_time': micro_answers_time - (micro_trials['start_time'].to_numpy() + 6),
         'fname': file_string,
     }
