@@ -1,3 +1,7 @@
+### 2025-08-15
+- Record additional statistics on old and new files
+- Rename `detect_segments` function to `detect_trials`
+
 ### 2025-07-31
 - Compatibility for new data files
 - Recalculate `hiEEG` notebook on new files

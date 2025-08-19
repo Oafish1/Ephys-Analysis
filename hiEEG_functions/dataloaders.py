@@ -156,7 +156,7 @@ def load_iEEG_micro(subject, session, folder='data/hiEEG', format='old'):
     return data, meta
 
 
-def detect_segments(time, waveform, eps=1e-5):
+def detect_trials(time, waveform, eps=1e-5):
     assert time.shape[0] == waveform.shape[0], 'Time and waveform length must match.'
 
     # Detect gaps
