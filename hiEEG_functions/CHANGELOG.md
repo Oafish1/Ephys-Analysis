@@ -1,3 +1,11 @@
+### 2025-08-27
+- Add `get_nwb_sizes` function to map file data allocation
+- Completed region mapping, data statistics
+- New export folder
+
+### 2025-08-23
+- More statistics on files, including trial numbers
+
 ### 2025-08-15
 - Record additional statistics on old and new files
 - Rename `detect_segments` function to `detect_trials`

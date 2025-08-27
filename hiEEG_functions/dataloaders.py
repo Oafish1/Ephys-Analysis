@@ -3,6 +3,7 @@ import warnings
 
 import h5py
 import numpy as np
+import pandas as pd
 import pynwb
 
 
@@ -175,3 +176,33 @@ def detect_trials(time, waveform, eps=1e-5):
         new_time = [time[sidx:eidx]  for sidx, eidx in zip(start_idx, end_idx)]
         new_waveform = [waveform[sidx:eidx]  for sidx, eidx in zip(start_idx, end_idx)]
     return {'time': new_time, 'waveform': new_waveform}
+
+
+def _get_h5_size(obj):
+    # Defaults
+    uncompressed = compressed = 0
+
+    # Dataset case
+    if isinstance(obj, h5py.Dataset):
+        uncompressed += obj.size * obj.dtype.itemsize
+        compressed += obj.id.get_storage_size()
+    
+    # Group case
+    elif isinstance(obj, h5py.Group):
+        for sub_obj in obj.values():
+            unc, com = _get_h5_size(sub_obj)
+            uncompressed += unc
+            compressed += com
+
+    return uncompressed, compressed
+
+def _get_nwb_segment_size(nwb_file_path):
+    sizes = {}
+    with h5py.File(nwb_file_path, 'r') as f:
+        for name, obj in f.items(): sizes[name] = _get_h5_size(obj)
+    return sizes
+
+
+def get_nwb_sizes(fname):
+    sizes = _get_nwb_segment_size(fname)
+    return pd.DataFrame(sizes, index=('Uncompressed', 'Compressed')).T / 1024**3
