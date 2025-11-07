@@ -1,3 +1,13 @@
+### 2025-11-06
+- Better organization of new analyses and visualization
+- Procedural documentation of single units
+
+### 2025-10-30
+- Additional visualizations and exploration of single units
+
+### 2025-10-23
+- Unit checking for new and old data, as well as localization
+
 ### 2025-08-27
 - Add `get_nwb_sizes` function to map file data allocation
 - Completed region mapping, data statistics
