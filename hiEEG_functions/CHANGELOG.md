@@ -1,3 +1,6 @@
+### 2025-11-22
+- Reclassification of unit regions
+
 ### 2025-11-06
 - Better organization of new analyses and visualization
 - Procedural documentation of single units
