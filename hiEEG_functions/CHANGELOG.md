@@ -1,3 +1,6 @@
+### 2025-12-11
+- Correspondence of label and location
+
 ### 2025-11-22
 - Reclassification of unit regions
 
